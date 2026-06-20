@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     # Third party
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
     # Local apps
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'apps.products',
     'apps.employees',
     'apps.expenses',
+    'apps.billing',
     'apps.reports',
     'apps.settings',
 ]
