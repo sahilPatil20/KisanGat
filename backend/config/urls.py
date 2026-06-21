@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.urls import path, include
+from apps.authentication.views import ProfileView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/auth/', include('apps.authentication.urls')),
+    path('api/v1/profile/', ProfileView.as_view(), name='profile'),
     path('api/v1/dashboard/', include('apps.dashboard.urls')),
     path('api/v1/farmers/', include('apps.farmers.urls')),
     path('api/v1/collections/', include('apps.collections.urls')),
@@ -15,4 +17,5 @@ urlpatterns = [
     path('api/v1/employees/', include('apps.employees.urls')),
     path('api/v1/expenses/', include('apps.expenses.urls')),
     path('api/v1/billing/', include('apps.billing.urls')),
+    path('api/v1/settings/', include('apps.settings.urls')),
 ]

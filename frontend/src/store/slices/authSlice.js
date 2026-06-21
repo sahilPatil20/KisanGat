@@ -23,8 +23,8 @@ const authSlice = createSlice({
             state.refreshToken = null;
             state.isAuthenticated = false;
             state.user = null;
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            localStorage.clear();
+            sessionStorage.clear();
         },
         setUser: (state, action) => {
             state.user = action.payload;

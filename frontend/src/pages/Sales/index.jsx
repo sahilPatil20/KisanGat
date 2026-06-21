@@ -11,9 +11,13 @@ import {
   TableRow,
   CircularProgress,
   Button,
-  Chip
+  Chip,
+  Card,
+  Grid,
+  CardContent,
+  Avatar
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, Receipt as ReceiptIcon, AccountBalanceWallet as WalletIcon } from '@mui/icons-material';
 import { axiosPrivate } from '../../api/axios';
 import AddSaleModal from './AddSaleModal';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -49,67 +53,124 @@ function SalesList() {
     fetchSales();
   };
 
+  const todaySales = sales.filter(s => s.sale_date === new Date().toISOString().split('T')[0]);
+  const totalVolume = todaySales.reduce((sum, s) => sum + parseFloat(s.quantity), 0);
+  const totalRevenue = todaySales.reduce((sum, s) => sum + parseFloat(s.total_amount), 0);
+
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold" color="primary">
-          Milk Sales
-        </Typography>
+    <Box sx={{ p: { xs: 1, md: 2 } }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, mb: 4, gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary' }}>
+            Milk Sales & Billing
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Record customer sales, track invoices, and manage revenue.
+          </Typography>
+        </Box>
         <Button 
           variant="contained" 
           color="primary" 
           startIcon={<AddIcon />}
           onClick={() => setModalOpen(true)}
+          sx={{ borderRadius: '8px', px: 3, py: 1 }}
         >
-          Record Sale
+          New Point of Sale
         </Button>
       </Box>
 
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 200px)' }}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6}>
+          <Card sx={{ borderRadius: '16px', border: '1px solid rgba(16,185,129,0.1)', boxShadow: '0 4px 12px rgba(16,185,129,0.05)' }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, '&:last-child': { pb: 3 } }}>
+              <Box>
+                <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Today's Volume Sold</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: '#10B981', mt: 0.5 }}>{totalVolume.toFixed(1)} L</Typography>
+              </Box>
+              <Avatar sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10B981', width: 56, height: 56 }}>
+                <ReceiptIcon fontSize="large" />
+              </Avatar>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Card sx={{ borderRadius: '16px', border: '1px solid rgba(37,99,235,0.1)', boxShadow: '0 4px 12px rgba(37,99,235,0.05)' }}>
+            <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, '&:last-child': { pb: 3 } }}>
+              <Box>
+                <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Today's Revenue</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: 'primary.main', mt: 0.5 }}>₹{totalRevenue.toLocaleString('en-IN', {maximumFractionDigits: 2})}</Typography>
+              </Box>
+              <Avatar sx={{ bgcolor: 'rgba(37,99,235,0.1)', color: 'primary.main', width: 56, height: 56 }}>
+                <WalletIcon fontSize="large" />
+              </Avatar>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
+        <TableContainer sx={{ maxHeight: 'calc(100vh - 350px)' }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Shift</TableCell>
-                <TableCell>Customer</TableCell>
-                <TableCell>Milk Type</TableCell>
-                <TableCell align="right">Qty (L)</TableCell>
-                <TableCell align="right">Rate (₹)</TableCell>
-                <TableCell align="right">Total (₹)</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Invoice Date</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Customer</TableCell>
+                <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Details</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Qty (L)</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Rate (₹)</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Total (₹)</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : sales.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
-                    <Typography color="textSecondary">No sales recorded yet.</Typography>
+                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                    <Typography color="text.secondary">No sales recorded yet. Click 'New Point of Sale' to begin.</Typography>
                   </TableCell>
                 </TableRow>
               ) : (
                 sales.map((sale) => (
                   <TableRow hover key={sale.id}>
-                    <TableCell>{new Date(sale.sale_date).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Chip 
-                        label={sale.shift} 
-                        size="small" 
-                        color={sale.shift === 'MORNING' ? 'warning' : 'primary'}
-                        variant="outlined" 
-                      />
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{new Date(sale.sale_date).toLocaleDateString()}</Typography>
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>{sale.customer_name}</TableCell>
-                    <TableCell>{sale.milk_type}</TableCell>
-                    <TableCell align="right">{sale.quantity}</TableCell>
-                    <TableCell align="right">{sale.applied_rate}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                      {sale.total_amount}
+                    <TableCell>
+                      <Typography sx={{ fontWeight: 700 }}>{sale.customer_name}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Chip 
+                          label={sale.shift} 
+                          size="small" 
+                          sx={{ 
+                            bgcolor: sale.shift === 'MORNING' ? 'rgba(217,119,6,0.1)' : 'rgba(79,70,229,0.1)',
+                            color: sale.shift === 'MORNING' ? '#D97706' : '#4F46E5',
+                            fontWeight: 700,
+                            fontSize: '0.65rem'
+                          }} 
+                        />
+                        <Chip 
+                          label={sale.milk_type}
+                          size="small"
+                          sx={{
+                            bgcolor: sale.milk_type === 'COW' ? 'rgba(37,99,235,0.1)' : 'rgba(124,58,237,0.1)',
+                            color: sale.milk_type === 'COW' ? 'primary.main' : '#7C3AED',
+                            fontWeight: 700,
+                            fontSize: '0.65rem'
+                          }}
+                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>{sale.quantity}</TableCell>
+                    <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>₹{sale.applied_rate}</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 800, color: 'success.main', fontSize: '1.1rem' }}>
+                      ₹ {parseFloat(sale.total_amount).toLocaleString('en-IN', {maximumFractionDigits: 2})}
                     </TableCell>
                   </TableRow>
                 ))
@@ -117,7 +178,7 @@ function SalesList() {
             </TableBody>
           </Table>
         </TableContainer>
-      </Paper>
+      </Card>
       
       <AddSaleModal 
         open={modalOpen} 

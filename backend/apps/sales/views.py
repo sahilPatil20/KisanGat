@@ -7,8 +7,8 @@ from django.db.models import Sum
 from decimal import Decimal
 from .models import MilkSale
 from .serializers import MilkSaleSerializer
-from apps.customers.models import CustomerLedger, CustomerPayment
 from apps.collections.models import MilkCollection
+from apps.customers.models import Customer, CustomerLedger, CustomerPayment
 
 class MilkSaleViewSet(viewsets.ModelViewSet):
     queryset = MilkSale.objects.all().order_by('-created_at')
@@ -21,6 +21,25 @@ class MilkSaleViewSet(viewsets.ModelViewSet):
         total_sales = MilkSale.objects.aggregate(total=Sum('quantity'))['total'] or Decimal('0.00')
         available = total_collections - total_sales
         return Response({"available_inventory": available})
+
+    @action(detail=False, methods=['get'], url_path='customer-summary')
+    def customer_summary(self, request):
+        customer_id = request.query_params.get('customer_id')
+        if not customer_id:
+            return Response({"detail": "customer_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            customer = Customer.objects.get(id=customer_id)
+        except Customer.DoesNotExist:
+            return Response({"detail": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        latest_ledger = customer.ledger_entries.order_by('-transaction_date', '-id').first()
+        outstanding_balance = latest_ledger.running_balance if latest_ledger else Decimal('0.00')
+        
+        return Response({
+            "customer_name": customer.name,
+            "outstanding_balance": float(outstanding_balance)
+        })
 
     def perform_create(self, serializer):
         with transaction.atomic():

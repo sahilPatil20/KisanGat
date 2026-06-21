@@ -3,65 +3,73 @@ import {
   Card, 
   CardContent, 
   Typography, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow,
-  Chip
+  Box,
+  Avatar,
+  Divider
 } from '@mui/material';
+import {
+  LocalDrink as DrinkIcon,
+  AttachMoney as SalesIcon,
+  Payment as PaymentIcon
+} from '@mui/icons-material';
 
-// We'll use static mock data here as a placeholder until the API provides it
-const mockTransactions = [
-  { id: 1, type: 'Collection', entity: 'Ramesh Singh', amount: '45.5 L', time: '10:30 AM', status: 'Completed' },
-  { id: 2, type: 'Sale', entity: 'Local Dairy Outlet', amount: '₹ 12,000', time: '09:15 AM', status: 'Completed' },
-  { id: 3, type: 'Collection', entity: 'Suresh Patil', amount: '30.0 L', time: '08:45 AM', status: 'Pending' },
-  { id: 4, type: 'Sale', entity: 'Walk-in Customer', amount: '₹ 250', time: '08:10 AM', status: 'Completed' },
-];
+export default function RecentTransactionsTable({ data }) {
+  if (!data || data.length === 0) return null;
 
-export default function RecentTransactionsTable() {
+  const getIcon = (type) => {
+    if (type.includes('Collection')) return <DrinkIcon fontSize="small" sx={{ color: '#2563EB' }} />;
+    if (type.includes('Sale')) return <SalesIcon fontSize="small" sx={{ color: '#059669' }} />;
+    return <PaymentIcon fontSize="small" sx={{ color: '#7C3AED' }} />;
+  };
+
+  const getBgColor = (type) => {
+    if (type.includes('Collection')) return 'rgba(37,99,235,0.1)';
+    if (type.includes('Sale')) return 'rgba(5,150,105,0.1)';
+    return 'rgba(124,58,237,0.1)';
+  };
+
   return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Recent Transactions
+    <Card sx={{ height: '100%', borderRadius: '16px' }}>
+      <CardContent sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>
+          Recent Activity Feed
         </Typography>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Type</TableCell>
-                <TableCell>Entity</TableCell>
-                <TableCell>Amount/Qty</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {mockTransactions.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <Chip 
-                      label={row.type} 
-                      size="small" 
-                      color={row.type === 'Collection' ? 'primary' : 'success'} 
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell>{row.entity}</TableCell>
-                  <TableCell>{row.amount}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={row.status} 
-                      size="small" 
-                      color={row.status === 'Completed' ? 'success' : 'warning'} 
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {data.slice(0, 6).map((row, index) => (
+            <React.Fragment key={index}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: getBgColor(row.type), width: 40, height: 40 }}>
+                  {getIcon(row.type)}
+                </Avatar>
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>
+                    {row.entity}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+                    {row.type} • {new Date(row.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'right' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: row.type.includes('Collection') ? 'text.primary' : (row.type.includes('Sale') ? '#059669' : '#E11D48') }}>
+                    {row.amount}
+                  </Typography>
+                  <Typography variant="caption" sx={{ 
+                    color: row.status === 'Success' ? '#059669' : '#D97706',
+                    bgcolor: row.status === 'Success' ? 'rgba(5,150,105,0.1)' : 'rgba(217,119,6,0.1)',
+                    px: 1,
+                    py: 0.2,
+                    borderRadius: '4px',
+                    fontWeight: 600
+                  }}>
+                    {row.status}
+                  </Typography>
+                </Box>
+              </Box>
+              {index < data.slice(0, 6).length - 1 && <Divider sx={{ borderColor: 'rgba(0,0,0,0.04)' }} />}
+            </React.Fragment>
+          ))}
+        </Box>
       </CardContent>
     </Card>
   );

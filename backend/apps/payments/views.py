@@ -8,6 +8,8 @@ from decimal import Decimal
 from .models import FarmerPayment
 from .serializers import FarmerPaymentSerializer
 from apps.farmers.models import Farmer, FarmerLedger
+from apps.collections.models import MilkCollection
+from django.db.models import Sum
 
 class FarmerPaymentViewSet(viewsets.ModelViewSet):
     queryset = FarmerPayment.objects.all().order_by('-created_at')
@@ -29,6 +31,37 @@ class FarmerPaymentViewSet(viewsets.ModelViewSet):
                     "due_amount": latest.running_balance
                 })
         return Response(pending, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='farmer-summary')
+    def farmer_summary(self, request):
+        farmer_id = request.query_params.get('farmer_id')
+        if not farmer_id:
+            return Response({"detail": "farmer_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            farmer = Farmer.objects.get(id=farmer_id)
+        except Farmer.DoesNotExist:
+            return Response({"detail": "Farmer not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        # Get latest ledger
+        latest_ledger = farmer.ledger_entries.order_by('-transaction_date', '-id').first()
+        pending_balance = latest_ledger.running_balance if latest_ledger else Decimal('0.00')
+        
+        # Calculate other summaries
+        collections = MilkCollection.objects.filter(farmer=farmer)
+        total_liters = collections.aggregate(total=Sum('quantity'))['total'] or Decimal('0.00')
+        total_earned = collections.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+        
+        payments = FarmerPayment.objects.filter(farmer=farmer)
+        total_paid = payments.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        
+        return Response({
+            "farmer_name": farmer.name,
+            "total_liters": float(total_liters),
+            "gross_amount": float(total_earned),
+            "already_paid": float(total_paid),
+            "pending_balance": float(pending_balance)
+        })
 
     @action(detail=False, methods=['post'], url_path='bulk-settle')
     def bulk_settle(self, request):

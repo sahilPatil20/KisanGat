@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -10,7 +10,9 @@ import {
   CircularProgress,
   Alert,
   Box,
-  Typography
+  Typography,
+  Grid,
+  Divider
 } from '@mui/material';
 import { axiosPrivate } from '../../api/axios';
 
@@ -27,8 +29,43 @@ export default function RecordPaymentModal({ open, onClose, farmer, onSuccess })
     reference_number: '',
     remarks: ''
   });
+  
+  const [summary, setSummary] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (open && farmer) {
+      // Reset form
+      setFormData({
+        amount: '',
+        payment_method: 'CASH',
+        reference_number: '',
+        remarks: ''
+      });
+      setError(null);
+      fetchSummary();
+    }
+  }, [open, farmer]);
+
+  const fetchSummary = async () => {
+    setLoadingSummary(true);
+    try {
+      const response = await axiosPrivate.get(`/payments/farmer-summary/?farmer_id=${farmer.id}`);
+      setSummary(response.data);
+      // Auto-fill the payable amount
+      setFormData(prev => ({
+        ...prev,
+        amount: response.data.pending_balance > 0 ? response.data.pending_balance.toString() : ''
+      }));
+    } catch (err) {
+      console.error('Failed to fetch farmer summary', err);
+      setError('Could not calculate pending balance automatically.');
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -39,8 +76,15 @@ export default function RecordPaymentModal({ open, onClose, farmer, onSuccess })
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      setError('Please enter a valid amount.');
+    const payAmount = parseFloat(formData.amount);
+    
+    if (!payAmount || payAmount <= 0) {
+      setError('Please enter a valid amount greater than 0.');
+      return;
+    }
+
+    if (summary && payAmount > summary.pending_balance) {
+      setError(`Amount exceeds payable balance of ₹${summary.pending_balance}`);
       return;
     }
 
@@ -50,7 +94,7 @@ export default function RecordPaymentModal({ open, onClose, farmer, onSuccess })
     try {
       await axiosPrivate.post('/payments/', {
         farmer: farmer.id,
-        amount: parseFloat(formData.amount),
+        amount: payAmount,
         payment_method: formData.payment_method,
         reference_number: formData.reference_number,
         remarks: formData.remarks
@@ -77,13 +121,38 @@ export default function RecordPaymentModal({ open, onClose, farmer, onSuccess })
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           
           <Box sx={{ mb: 3, p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
-            <Typography variant="subtitle2" color="textSecondary">Farmer</Typography>
+            <Typography variant="subtitle2" color="textSecondary">Farmer Details</Typography>
             <Typography variant="h6">{farmer.name} ({farmer.mobile_number})</Typography>
             
-            <Typography variant="subtitle2" color="textSecondary" sx={{ mt: 1 }}>Current Balance Owed</Typography>
-            <Typography variant="h5" color="error.main" fontWeight="bold">
-              ₹ {farmer.current_balance}
-            </Typography>
+            <Divider sx={{ my: 1.5 }} />
+
+            {loadingSummary ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <CircularProgress size={20} />
+                <Typography variant="body2" color="textSecondary">Calculating balance...</Typography>
+              </Box>
+            ) : summary ? (
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="textSecondary">Total Milk Supplied</Typography>
+                  <Typography variant="body1" fontWeight="medium">{summary.total_liters} Liters</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="textSecondary">Gross Amount Earned</Typography>
+                  <Typography variant="body1" fontWeight="medium">₹ {summary.gross_amount}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="textSecondary">Already Paid</Typography>
+                  <Typography variant="body1" fontWeight="medium">₹ {summary.already_paid}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="caption" color="error.main">Net Payable Balance</Typography>
+                  <Typography variant="h6" color="error.main" fontWeight="bold">₹ {summary.pending_balance}</Typography>
+                </Grid>
+              </Grid>
+            ) : (
+              <Typography variant="body2" color="error">Failed to load summary</Typography>
+            )}
           </Box>
 
           <TextField
@@ -94,9 +163,10 @@ export default function RecordPaymentModal({ open, onClose, farmer, onSuccess })
             value={formData.amount}
             onChange={handleChange}
             required
-            inputProps={{ step: "0.01", min: "0.01", max: farmer.current_balance > 0 ? farmer.current_balance : undefined }}
+            inputProps={{ step: "0.01", min: "0.01", max: summary?.pending_balance > 0 ? summary.pending_balance : undefined }}
             margin="normal"
             autoFocus
+            disabled={loadingSummary}
           />
 
           <TextField
@@ -125,6 +195,15 @@ export default function RecordPaymentModal({ open, onClose, farmer, onSuccess })
             margin="normal"
             placeholder="e.g. UTR / Cheque No."
           />
+          
+          <TextField
+            fullWidth
+            label="Remarks"
+            name="remarks"
+            value={formData.remarks}
+            onChange={handleChange}
+            margin="normal"
+          />
 
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
@@ -135,10 +214,10 @@ export default function RecordPaymentModal({ open, onClose, farmer, onSuccess })
             type="submit" 
             variant="contained" 
             color="primary"
-            disabled={loading}
+            disabled={loading || loadingSummary || (summary && summary.pending_balance <= 0)}
             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
           >
-            Record Payment
+            {loading ? 'Processing...' : 'Record Payment'}
           </Button>
         </DialogActions>
       </form>

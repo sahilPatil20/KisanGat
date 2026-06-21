@@ -3,18 +3,26 @@ import {
   Box, 
   Typography, 
   Button, 
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  Grid,
+  Card,
+  CardContent,
+  Avatar,
   CircularProgress,
   IconButton,
-  Tooltip
+  Tooltip,
+  InputAdornment,
+  TextField,
+  Chip
 } from '@mui/material';
-import { Add as AddIcon, Visibility as ViewIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { 
+  Add as AddIcon, 
+  Visibility as ViewIcon, 
+  Delete as DeleteIcon,
+  Search as SearchIcon,
+  Phone as PhoneIcon,
+  LocalDrink as DrinkIcon,
+  AttachMoney as MoneyIcon
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { axiosPrivate } from '../../api/axios';
 import AddFarmerModal from './AddFarmerModal';
@@ -25,6 +33,7 @@ export default function FarmersList() {
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [farmerToDelete, setFarmerToDelete] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,69 +60,139 @@ export default function FarmersList() {
     setFarmers(prev => Array.isArray(prev) ? prev.filter(f => f.id !== deletedId) : []);
   };
 
+  const filteredFarmers = Array.isArray(farmers) 
+    ? farmers.filter(f => f.name?.toLowerCase().includes(searchQuery.toLowerCase()) || f.mobile_number?.includes(searchQuery))
+    : [];
+
+  const getInitials = (name) => {
+    if (!name) return 'F';
+    return name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+
   if (loading) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}><CircularProgress /></Box>;
+    return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold">Farmers</Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          Add Farmer
-        </Button>
+    <Box sx={{ p: { xs: 1, md: 2 } }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, mb: 4, gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary' }}>Farmers Directory</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Manage your dairy farmers and track their collections</Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', md: 'auto' } }}>
+          <TextField
+            placeholder="Search farmers..."
+            size="small"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ width: { xs: '100%', md: '250px' }, bgcolor: 'white', borderRadius: 2 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+              sx: { borderRadius: '12px' }
+            }}
+          />
+          <Button 
+            variant="contained" 
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setIsAddModalOpen(true)}
+            sx={{ borderRadius: '8px', px: 3, whiteSpace: 'nowrap' }}
+          >
+            Add Farmer
+          </Button>
+        </Box>
       </Box>
 
-      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #eee' }}>
-        <Table>
-          <TableHead sx={{ bgcolor: '#f8f9fa' }}>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Mobile Number</TableCell>
-              <TableCell>Current Balance (₹)</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {!Array.isArray(farmers) || farmers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                  No farmers found. Click 'Add Farmer' to create one.
-                </TableCell>
-              </TableRow>
-            ) : (
-              farmers.map((farmer) => (
-                <TableRow key={farmer.id} hover>
-                  <TableCell fontWeight="medium">{farmer.name}</TableCell>
-                  <TableCell>{farmer.mobile_number}</TableCell>
-                  <TableCell sx={{ 
-                    color: parseFloat(farmer.current_balance) < 0 ? 'error.main' : 'success.main',
-                    fontWeight: 'bold'
-                  }}>
-                    {farmer.current_balance}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="View Profile">
-                      <IconButton color="primary" onClick={() => navigate(`/farmers/${farmer.id}`)}>
-                        <ViewIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete Farmer">
-                      <IconButton color="error" onClick={() => setFarmerToDelete(farmer)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {filteredFarmers.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 10, bgcolor: 'background.paper', borderRadius: 4, border: '1px dashed #ccc' }}>
+          <Typography color="text.secondary">No farmers found matching your criteria.</Typography>
+          <Button variant="outlined" sx={{ mt: 2 }} onClick={() => setIsAddModalOpen(true)}>Create New Farmer</Button>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredFarmers.map((farmer) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={farmer.id}>
+              <Card sx={{ 
+                height: '100%', 
+                borderRadius: '16px', 
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 12px 24px -10px rgba(37, 99, 235, 0.2)' }
+              }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Avatar sx={{ width: 56, height: 56, bgcolor: 'primary.light', color: 'primary.dark', fontWeight: 700, fontSize: '1.2rem' }}>
+                      {getInitials(farmer.name)}
+                    </Avatar>
+                    <Box>
+                      <Tooltip title="View Profile">
+                        <IconButton size="small" sx={{ bgcolor: 'rgba(37,99,235,0.05)', color: 'primary.main', mr: 1, '&:hover': { bgcolor: 'rgba(37,99,235,0.1)' } }} onClick={() => navigate(`/farmers/${farmer.id}`)}>
+                          <ViewIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Farmer">
+                        <IconButton size="small" sx={{ bgcolor: 'rgba(225,29,72,0.05)', color: 'error.main', '&:hover': { bgcolor: 'rgba(225,29,72,0.1)' } }} onClick={() => setFarmerToDelete(farmer)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+                  
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, lineHeight: 1.2 }}>
+                    {farmer.name}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mb: 2.5, gap: 0.5 }}>
+                    <PhoneIcon sx={{ fontSize: 16 }} />
+                    <Typography variant="body2">{farmer.mobile_number || 'N/A'}</Typography>
+                  </Box>
+
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid item xs={6}>
+                      <Box sx={{ bgcolor: 'background.default', p: 1.5, borderRadius: '12px' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', mb: 0.5 }}>
+                          <MoneyIcon sx={{ fontSize: 16 }} />
+                          <Typography variant="caption" fontWeight="600">Balance</Typography>
+                        </Box>
+                        <Typography variant="subtitle2" sx={{ 
+                          fontWeight: 800, 
+                          color: parseFloat(farmer.current_balance) < 0 ? 'error.main' : 'success.main' 
+                        }}>
+                          ₹ {parseFloat(farmer.current_balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ bgcolor: 'background.default', p: 1.5, borderRadius: '12px' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', mb: 0.5 }}>
+                          <DrinkIcon sx={{ fontSize: 16 }} />
+                          <Typography variant="caption" fontWeight="600">Avg Qty</Typography>
+                        </Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary' }}>
+                          -- L
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+
+                  <Button 
+                    fullWidth 
+                    variant="outlined" 
+                    color="primary" 
+                    onClick={() => navigate(`/farmers/${farmer.id}`)}
+                    sx={{ borderRadius: '8px', fontWeight: 600 }}
+                  >
+                    View Full Profile
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <AddFarmerModal 
         open={isAddModalOpen} 

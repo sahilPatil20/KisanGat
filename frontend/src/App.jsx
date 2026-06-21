@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import ProtectedRoute from './routes/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
+import SessionTimeoutGuard from './components/SessionTimeoutGuard';
 import Dashboard from './pages/Dashboard';
 import FarmersList from './pages/Farmers';
 import FarmerProfile from './pages/Farmers/FarmerProfile';
@@ -16,6 +17,8 @@ import ProductsModule from './pages/Products';
 import EmployeesModule from './pages/Employees';
 import ExpensesModule from './pages/Expenses';
 import BillingModule from './pages/Billing';
+import Settings from './pages/Settings';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -25,7 +28,11 @@ function App() {
         
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<MainLayout />}>
+          <Route element={
+            <SessionTimeoutGuard>
+              <MainLayout />
+            </SessionTimeoutGuard>
+          }>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/farmers" element={<FarmersList />} />
@@ -40,6 +47,8 @@ function App() {
             <Route path="/employees" element={<EmployeesModule />} />
             <Route path="/expenses" element={<ExpensesModule />} />
             <Route path="/billing" element={<BillingModule />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
         </Route>
         

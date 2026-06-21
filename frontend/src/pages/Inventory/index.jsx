@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, Tabs, Tab, Button, Grid, Card, CardContent,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  CircularProgress, Chip
+  CircularProgress, Chip, Avatar
 } from '@mui/material';
-import { Add as AddIcon, Inventory as InventoryIcon, Opacity as DropsIcon } from '@mui/icons-material';
+import { Add as AddIcon, Inventory as InventoryIcon, Opacity as DropsIcon, TrendingUp as UpIcon, TrendingDown as DownIcon } from '@mui/icons-material';
 import { axiosPrivate } from '../../api/axios';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import AddAdjustmentModal from './AddAdjustmentModal';
@@ -72,67 +72,89 @@ function InventoryModule() {
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold" color="primary">
-          Inventory Management
-        </Typography>
+    <Box sx={{ p: { xs: 1, md: 2 } }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, mb: 4, gap: 2 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary' }}>
+            Inventory Dashboard
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Monitor live stock movements, record adjustments, and audit inventory history.
+          </Typography>
+        </Box>
         <Button 
           variant="contained" 
           color="error" 
           startIcon={<AddIcon />}
           onClick={() => setModalOpen(true)}
+          sx={{ borderRadius: '8px', px: 3, py: 1, fontWeight: 700 }}
         >
-          Record Adjustment
+          Record Stock Adjustment
         </Button>
       </Box>
 
       {/* KPI Cards */}
       {dashboard && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={4}>
-            <Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <InventoryIcon /> Current Total Stock
-                </Typography>
-                <Typography variant="h3" fontWeight="bold">
-                  {dashboard.current_stock.total} L
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                  <Typography variant="body2">Cow: {dashboard.current_stock.cow} L</Typography>
-                  <Typography variant="body2">Buffalo: {dashboard.current_stock.buffalo} L</Typography>
+          <Grid item xs={12} md={4}>
+            <Card sx={{ borderRadius: '16px', border: '1px solid rgba(37,99,235,0.1)', boxShadow: '0 4px 12px rgba(37,99,235,0.05)', bgcolor: 'primary.main', color: 'white', height: '100%' }}>
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.9 }}>Current Total Stock</Typography>
+                  <InventoryIcon sx={{ opacity: 0.8 }} />
+                </Box>
+                <Typography variant="h2" sx={{ fontWeight: 800, mb: 1 }}>{dashboard.current_stock.total} <Typography component="span" variant="h5" sx={{ opacity: 0.8 }}>L</Typography></Typography>
+                
+                <Box sx={{ mt: 4, p: 2, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, display: 'flex', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="caption" sx={{ opacity: 0.8, fontWeight: 600 }}>Cow Milk</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>{dashboard.current_stock.cow} L</Typography>
+                  </Box>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="caption" sx={{ opacity: 0.8, fontWeight: 600 }}>Buffalo Milk</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>{dashboard.current_stock.buffalo} L</Typography>
+                  </Box>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={8}>
-            <Grid container spacing={2}>
+
+          <Grid item xs={12} md={8}>
+            <Grid container spacing={3} sx={{ height: '100%' }}>
               <Grid item xs={12} sm={4}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography color="textSecondary" gutterBottom>Today's Collection</Typography>
-                    <Typography variant="h5" color="success.main" fontWeight="bold">
+                <Card sx={{ borderRadius: '16px', border: '1px solid rgba(16,185,129,0.1)', boxShadow: '0 4px 12px rgba(16,185,129,0.05)', height: '100%' }}>
+                  <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3 }}>
+                    <Avatar sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#10B981', mb: 2 }}>
+                      <UpIcon />
+                    </Avatar>
+                    <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Today's Intake</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#10B981', mt: 'auto' }}>
                       +{dashboard.today_collection} L
                     </Typography>
                   </CardContent>
                 </Card>
               </Grid>
               <Grid item xs={12} sm={4}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography color="textSecondary" gutterBottom>Today's Sales</Typography>
-                    <Typography variant="h5" color="info.main" fontWeight="bold">
+                <Card sx={{ borderRadius: '16px', border: '1px solid rgba(245,158,11,0.1)', boxShadow: '0 4px 12px rgba(245,158,11,0.05)', height: '100%' }}>
+                  <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3 }}>
+                    <Avatar sx={{ bgcolor: 'rgba(245,158,11,0.1)', color: '#F59E0B', mb: 2 }}>
+                      <DownIcon />
+                    </Avatar>
+                    <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Today's Dispatch</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: '#F59E0B', mt: 'auto' }}>
                       -{dashboard.today_sales} L
                     </Typography>
                   </CardContent>
                 </Card>
               </Grid>
               <Grid item xs={12} sm={4}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography color="textSecondary" gutterBottom>Today's Adjustments</Typography>
-                    <Typography variant="h5" color="error.main" fontWeight="bold">
+                <Card sx={{ borderRadius: '16px', border: '1px solid rgba(225,29,72,0.1)', boxShadow: '0 4px 12px rgba(225,29,72,0.05)', height: '100%' }}>
+                  <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 3 }}>
+                    <Avatar sx={{ bgcolor: 'rgba(225,29,72,0.1)', color: '#E11D48', mb: 2 }}>
+                      <DropsIcon />
+                    </Avatar>
+                    <Typography color="text.secondary" variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Net Adjustments</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 800, color: dashboard.today_adjustments < 0 ? '#E11D48' : '#10B981', mt: 'auto' }}>
                       {dashboard.today_adjustments > 0 ? '+' : ''}{dashboard.today_adjustments} L
                     </Typography>
                   </CardContent>
@@ -144,92 +166,111 @@ function InventoryModule() {
       )}
 
       {/* Tabs */}
-      <Paper sx={{ width: '100%', mb: 2 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabValue} onChange={handleTabChange}>
-            <Tab label="Inventory History" />
-            <Tab label="Adjustment Logs" />
+      <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'rgba(248, 250, 252, 0.8)' }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange}
+            sx={{
+              '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
+              '& .MuiTab-root': { fontWeight: 700, fontSize: '0.95rem', py: 2.5 }
+            }}
+          >
+            <Tab label="Daily Inventory Audit" />
+            <Tab label="Manual Adjustment Logs" />
           </Tabs>
         </Box>
 
-        <TabPanel value={tabValue} index={0}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell align="right">Opening Stock (L)</TableCell>
-                  <TableCell align="right">Collections (+)</TableCell>
-                  <TableCell align="right">Sales (-)</TableCell>
-                  <TableCell align="right">Adjustments</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>Closing Stock (L)</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {history.length === 0 ? (
+        <CardContent sx={{ p: 0 }}>
+          <TabPanel value={tabValue} index={0} sx={{ pt: 0 }}>
+            <TableContainer sx={{ maxHeight: 'calc(100vh - 450px)' }}>
+              <Table stickyHeader>
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>No inventory history found.</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Audit Date</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Opening Balance (L)</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Procurement (+)</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Sales (-)</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Adjustments</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Closing Balance (L)</TableCell>
                   </TableRow>
-                ) : (
-                  history.map((row, index) => (
-                    <TableRow hover key={index}>
-                      <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
-                      <TableCell align="right">{row.opening_stock}</TableCell>
-                      <TableCell align="right" sx={{ color: 'success.main' }}>{row.collection}</TableCell>
-                      <TableCell align="right" sx={{ color: 'info.main' }}>{row.sales}</TableCell>
-                      <TableCell align="right" sx={{ color: row.adjustments < 0 ? 'error.main' : 'inherit' }}>
-                        {row.adjustments}
-                      </TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{row.closing_stock}</TableCell>
+                </TableHead>
+                <TableBody>
+                  {history.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No inventory history found.</Typography></TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </TabPanel>
+                  ) : (
+                    history.map((row, index) => (
+                      <TableRow hover key={index}>
+                        <TableCell sx={{ fontWeight: 600 }}>{new Date(row.date).toLocaleDateString()}</TableCell>
+                        <TableCell align="right" sx={{ color: 'text.secondary', fontWeight: 600 }}>{row.opening_stock}</TableCell>
+                        <TableCell align="right" sx={{ color: '#10B981', fontWeight: 700 }}>+{row.collection}</TableCell>
+                        <TableCell align="right" sx={{ color: '#F59E0B', fontWeight: 700 }}>-{row.sales}</TableCell>
+                        <TableCell align="right" sx={{ color: row.adjustments < 0 ? '#E11D48' : row.adjustments > 0 ? '#10B981' : 'text.secondary', fontWeight: 700 }}>
+                          {row.adjustments > 0 ? '+' : ''}{row.adjustments}
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 800, fontSize: '1.05rem', color: 'primary.main' }}>{row.closing_stock}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </TabPanel>
 
-        <TabPanel value={tabValue} index={1}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Milk Type</TableCell>
-                  <TableCell>Reason</TableCell>
-                  <TableCell align="right">Quantity (L)</TableCell>
-                  <TableCell>Logged By</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {adjustments.length === 0 ? (
+          <TabPanel value={tabValue} index={1} sx={{ pt: 0 }}>
+            <TableContainer sx={{ maxHeight: 'calc(100vh - 450px)' }}>
+              <Table stickyHeader>
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>No manual adjustments recorded.</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Timestamp</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Action</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Product</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Reason Code</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Quantity (L)</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'background.paper' }}>Authorized By</TableCell>
                   </TableRow>
-                ) : (
-                  adjustments.map((adj) => (
-                    <TableRow hover key={adj.id}>
-                      <TableCell>{new Date(adj.created_at).toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={adj.adjustment_type} 
-                          color={adj.adjustment_type === 'ADD' ? 'success' : 'error'} 
-                          size="small" 
-                        />
-                      </TableCell>
-                      <TableCell>{adj.milk_type}</TableCell>
-                      <TableCell>{adj.reason.replace('_', ' ')}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{adj.quantity}</TableCell>
-                      <TableCell>{adj.created_by_name || 'System'}</TableCell>
+                </TableHead>
+                <TableBody>
+                  {adjustments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 6 }}><Typography color="text.secondary">No manual adjustments recorded.</Typography></TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </TabPanel>
-      </Paper>
+                  ) : (
+                    adjustments.map((adj) => (
+                      <TableRow hover key={adj.id}>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{new Date(adj.created_at).toLocaleDateString()}</Typography>
+                          <Typography variant="caption" color="text.secondary">{new Date(adj.created_at).toLocaleTimeString()}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={adj.adjustment_type} 
+                            sx={{ 
+                              bgcolor: adj.adjustment_type === 'ADD' ? 'rgba(16,185,129,0.1)' : 'rgba(225,29,72,0.1)',
+                              color: adj.adjustment_type === 'ADD' ? '#10B981' : '#E11D48',
+                              fontWeight: 700
+                            }} 
+                            size="small" 
+                          />
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>{adj.milk_type}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>{adj.reason.replace('_', ' ')}</Typography>
+                          {adj.notes && <Typography variant="caption" color="text.secondary" display="block">{adj.notes}</Typography>}
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 800, fontSize: '1.05rem' }}>{adj.quantity}</TableCell>
+                        <TableCell sx={{ color: 'text.secondary' }}>{adj.created_by_name || 'System Auto'}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </TabPanel>
+        </CardContent>
+      </Card>
 
       <AddAdjustmentModal 
         open={modalOpen} 
