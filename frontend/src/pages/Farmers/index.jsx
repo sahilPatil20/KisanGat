@@ -27,6 +27,14 @@ import { useNavigate } from 'react-router-dom';
 import { axiosPrivate } from '../../api/axios';
 import AddFarmerModal from './AddFarmerModal';
 import DeleteFarmerModal from './DeleteFarmerModal';
+import StatusBadge from '../../components/StatusBadge';
+
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg,#2563EB,#4F46E5)',
+  'linear-gradient(135deg,#059669,#0891B2)',
+  'linear-gradient(135deg,#D97706,#EA580C)',
+  'linear-gradient(135deg,#E11D48,#7C3AED)',
+];
 
 export default function FarmersList() {
   const [farmers, setFarmers] = useState([]);
@@ -115,7 +123,7 @@ export default function FarmersList() {
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {filteredFarmers.map((farmer) => (
+          {filteredFarmers.map((farmer, index) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={farmer.id}>
               <Card sx={{ 
                 height: '100%', 
@@ -125,10 +133,11 @@ export default function FarmersList() {
               }}>
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Avatar sx={{ width: 56, height: 56, bgcolor: 'primary.light', color: 'primary.dark', fontWeight: 700, fontSize: '1.2rem' }}>
+                    <Avatar sx={{ width: 56, height: 56, background: AVATAR_GRADIENTS[index % 4], color: 'white', fontWeight: 700, fontSize: '1.2rem' }}>
                       {getInitials(farmer.name)}
                     </Avatar>
-                    <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <StatusBadge status={farmer.status || 'ACTIVE'} />
                       <Tooltip title="View Profile">
                         <IconButton size="small" sx={{ bgcolor: 'rgba(37,99,235,0.05)', color: 'primary.main', mr: 1, '&:hover': { bgcolor: 'rgba(37,99,235,0.1)' } }} onClick={() => navigate(`/farmers/${farmer.id}`)}>
                           <ViewIcon fontSize="small" />
@@ -177,6 +186,23 @@ export default function FarmersList() {
                       </Box>
                     </Grid>
                   </Grid>
+
+                  <Box sx={{
+                    display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+                    gap: 1, mb: 2, pt: 1.5,
+                    borderTop: '1px solid #E2E8F0'
+                  }}>
+                    {[
+                      { label: 'Today', value: `${farmer.today_collection || 0} L` },
+                      { label: 'This Month', value: `${farmer.month_collection || 0} L` },
+                      { label: 'Earned', value: `₹${(farmer.month_earnings || 0).toLocaleString('en-IN')}` },
+                    ].map(stat => (
+                      <Box key={stat.label} sx={{ textAlign: 'center', bgcolor: '#F0F4FF', borderRadius: '8px', py: 0.75 }}>
+                        <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{stat.value}</Typography>
+                        <Typography sx={{ fontSize: 9, color: '#94A3B8', mt: 0.25 }}>{stat.label}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
 
                   <Button 
                     fullWidth 

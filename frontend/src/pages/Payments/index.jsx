@@ -9,6 +9,8 @@ import { axiosPrivate } from '../../api/axios';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import GeneratePayments from './GeneratePayments';
 import PaymentReceipt from './PaymentReceipt';
+import { formatDate } from '../../utils/formatDate';
+import StatusBadge from '../../components/StatusBadge';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -114,20 +116,12 @@ function PaymentsModule() {
                     payments.map((payment) => (
                       <TableRow hover key={payment.id}>
                         <TableCell>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{new Date(payment.created_at).toLocaleDateString()}</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(payment.created_at)}</Typography>
                           <Typography variant="caption" color="text.secondary">{new Date(payment.created_at).toLocaleTimeString()}</Typography>
                         </TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>{payment.farmer_name}</TableCell>
                         <TableCell>
-                          <Chip 
-                            label={payment.payment_method.replace('_', ' ')} 
-                            size="small" 
-                            sx={{ 
-                              bgcolor: 'rgba(124,58,237,0.1)', 
-                              color: '#7C3AED',
-                              fontWeight: 700
-                            }}
-                          />
+                          <StatusBadge status={payment.payment_method} />
                         </TableCell>
                         <TableCell sx={{ color: 'text.secondary' }}>{payment.reference_number || '-'}</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 800, color: 'error.main', fontSize: '1.1rem' }}>

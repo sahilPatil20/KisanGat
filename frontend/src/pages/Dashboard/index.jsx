@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, CircularProgress, Typography, Alert, Button } from '@mui/material';
+import { Box, Grid, CircularProgress, Typography, Alert, Button, Skeleton } from '@mui/material';
 import { axiosPrivate } from '../../api/axios';
 import KPICards from './components/KPICards';
 import RevenueChart from './components/RevenueChart';
 import RecentTransactionsTable from './components/RecentTransactionsTable';
 import { Download as DownloadIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -49,8 +51,31 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <CircularProgress />
+      // FIXED: Dashboard loading skeletons
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {/* Hero skeleton */}
+        <Skeleton variant="rectangular" width="100%" height={140}
+          sx={{ borderRadius: '16px' }} animation="wave" />
+        {/* KPI skeletons — 4 per row */}
+        <Grid container spacing={3}>
+          {[...Array(8)].map((_, i) => (
+            <Grid item xs={12} sm={6} md={3} key={i}>
+              <Skeleton variant="rectangular" height={120}
+                sx={{ borderRadius: '16px' }} animation="wave" />
+            </Grid>
+          ))}
+        </Grid>
+        {/* Chart skeleton */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} lg={8}>
+            <Skeleton variant="rectangular" height={320}
+              sx={{ borderRadius: '16px' }} animation="wave" />
+          </Grid>
+          <Grid item xs={12} lg={4}>
+            <Skeleton variant="rectangular" height={320}
+              sx={{ borderRadius: '16px' }} animation="wave" />
+          </Grid>
+        </Grid>
       </Box>
     );
   }
@@ -100,6 +125,26 @@ export default function Dashboard() {
         </Button>
       </Box>
       
+      {/* FIXED: Dashboard empty state */}
+      {dashboardData?.today_collection?.total === 0 && dashboardData?.today_sales?.total === 0 && (
+        <Box sx={{
+          textAlign: 'center', py: 6, px: 4,
+          bgcolor: 'background.paper', borderRadius: '16px',
+          border: '1px dashed #CBD5E1'
+        }}>
+          <Typography variant="h6" fontWeight={700} color="text.primary" mb={1}>
+            No activity recorded today
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={3}>
+            Start by recording your first milk collection for today.
+          </Typography>
+          <Button variant="contained" onClick={() => navigate('/collections')}
+            sx={{ borderRadius: '8px', px: 4, fontWeight: 700 }}>
+            Record First Collection →
+          </Button>
+        </Box>
+      )}
+
       <KPICards data={dashboardData} />
       
       <Grid container spacing={3}>

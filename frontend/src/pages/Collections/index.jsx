@@ -22,6 +22,8 @@ import {
 import { Add as AddIcon, LocalDrink as DrinkIcon, People as PeopleIcon } from '@mui/icons-material';
 import { axiosPrivate } from '../../api/axios';
 import AddCollectionModal from './AddCollectionModal';
+import { formatDate } from '../../utils/formatDate';
+import StatusBadge from '../../components/StatusBadge';
 
 export default function CollectionsList() {
   const [collections, setCollections] = useState([]);
@@ -153,33 +155,15 @@ export default function CollectionsList() {
                 collections.map((collection) => (
                   <TableRow key={collection.id} hover>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{collection.collection_date}</Typography>
-                      <Chip 
-                        label={collection.shift} 
-                        size="small" 
-                        sx={{ 
-                          mt: 0.5, 
-                          bgcolor: collection.shift === 'MORNING' ? 'rgba(217,119,6,0.1)' : 'rgba(79,70,229,0.1)',
-                          color: collection.shift === 'MORNING' ? '#D97706' : '#4F46E5',
-                          fontWeight: 700,
-                          fontSize: '0.65rem'
-                        }}
-                      />
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(collection.collection_date)}</Typography>
+                      <Box sx={{ mt: 0.5 }}><StatusBadge status={collection.shift} /></Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 700 }}>{collection.farmer_name}</Typography>
                       <Typography variant="caption" color="text.secondary">{collection.farmer_mobile}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={collection.milk_type}
-                        size="small"
-                        sx={{
-                          bgcolor: collection.milk_type === 'COW' ? 'rgba(37,99,235,0.1)' : 'rgba(124,58,237,0.1)',
-                          color: collection.milk_type === 'COW' ? 'primary.main' : '#7C3AED',
-                          fontWeight: 700
-                        }}
-                      />
+                      <StatusBadge status={collection.milk_type} />
                     </TableCell>
                     <TableCell align="right" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>{collection.quantity}</TableCell>
                     <TableCell align="right">

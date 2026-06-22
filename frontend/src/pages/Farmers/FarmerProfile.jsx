@@ -31,6 +31,8 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { axiosPrivate } from '../../api/axios';
 import RecordPaymentModal from './RecordPaymentModal';
+import { formatDate } from '../../utils/formatDate';
+import StatusBadge from '../../components/StatusBadge';
 
 export default function FarmerProfile() {
   const { id } = useParams();
@@ -108,7 +110,7 @@ export default function FarmerProfile() {
                 {getInitials(farmer.name)}
               </Avatar>
               <Typography variant="h5" sx={{ fontWeight: 800 }}>{farmer.name}</Typography>
-              <Chip label="Active" color="success" size="small" sx={{ mt: 1, fontWeight: 600 }} />
+              <Box sx={{ mt: 1 }}><StatusBadge status="ACTIVE" /></Box>
               
               <Box sx={{ mt: 4, p: 2, bgcolor: 'background.default', borderRadius: '12px', textAlign: 'left' }}>
                 <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
@@ -224,21 +226,13 @@ export default function FarmerProfile() {
                       ledger.map((entry) => (
                         <TableRow key={entry.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                           <TableCell sx={{ fontWeight: 500 }}>
-                            {new Date(entry.transaction_date).toLocaleDateString()}
+                            {formatDate(entry.transaction_date)}
                             <Typography variant="caption" display="block" color="text.secondary">
                               {new Date(entry.transaction_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                             </Typography>
                           </TableCell>
                           <TableCell>
-                            <Chip 
-                              label={entry.transaction_type} 
-                              size="small"
-                              sx={{
-                                bgcolor: entry.transaction_type === 'COLLECTION' ? 'rgba(37,99,235,0.1)' : (entry.transaction_type === 'PAYMENT' ? 'rgba(225,29,72,0.1)' : 'rgba(0,0,0,0.05)'),
-                                color: entry.transaction_type === 'COLLECTION' ? 'primary.main' : (entry.transaction_type === 'PAYMENT' ? 'error.main' : 'text.primary'),
-                                fontWeight: 700
-                              }}
-                            />
+                            <StatusBadge status={entry.transaction_type} />
                           </TableCell>
                           <TableCell align="right" sx={{ color: 'error.main', fontWeight: 600 }}>
                             {parseFloat(entry.debit_amount) > 0 ? parseFloat(entry.debit_amount).toLocaleString('en-IN', {maximumFractionDigits: 2}) : '-'}

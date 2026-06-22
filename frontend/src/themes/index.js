@@ -122,6 +122,10 @@ const theme = createTheme({
           '&:hover': {
             background: 'linear-gradient(135deg, #1D4ED8 0%, #1E3A8A 100%)',
           },
+          '&.Mui-disabled': {
+            background: 'rgba(0, 0, 0, 0.12)',
+            color: 'rgba(0, 0, 0, 0.26)',
+          },
         },
       },
     },

@@ -21,6 +21,8 @@ import { Add as AddIcon, Receipt as ReceiptIcon, AccountBalanceWallet as WalletI
 import { axiosPrivate } from '../../api/axios';
 import AddSaleModal from './AddSaleModal';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import { formatDate } from '../../utils/formatDate';
+import StatusBadge from '../../components/StatusBadge';
 
 function SalesList() {
   const [sales, setSales] = useState([]);
@@ -138,33 +140,15 @@ function SalesList() {
                 sales.map((sale) => (
                   <TableRow hover key={sale.id}>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{new Date(sale.sale_date).toLocaleDateString()}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(sale.sale_date)}</Typography>
                     </TableCell>
                     <TableCell>
                       <Typography sx={{ fontWeight: 700 }}>{sale.customer_name}</Typography>
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Chip 
-                          label={sale.shift} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: sale.shift === 'MORNING' ? 'rgba(217,119,6,0.1)' : 'rgba(79,70,229,0.1)',
-                            color: sale.shift === 'MORNING' ? '#D97706' : '#4F46E5',
-                            fontWeight: 700,
-                            fontSize: '0.65rem'
-                          }} 
-                        />
-                        <Chip 
-                          label={sale.milk_type}
-                          size="small"
-                          sx={{
-                            bgcolor: sale.milk_type === 'COW' ? 'rgba(37,99,235,0.1)' : 'rgba(124,58,237,0.1)',
-                            color: sale.milk_type === 'COW' ? 'primary.main' : '#7C3AED',
-                            fontWeight: 700,
-                            fontSize: '0.65rem'
-                          }}
-                        />
+                        <StatusBadge status={sale.shift} />
+                        <StatusBadge status={sale.milk_type} />
                       </Box>
                     </TableCell>
                     <TableCell align="right" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>{sale.quantity}</TableCell>

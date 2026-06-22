@@ -27,6 +27,7 @@ import {
   Button,
   Tooltip,
   Collapse,
+  Badge,
 } from '@mui/material';
 import { axiosPrivate } from '../api/axios';
 import {
@@ -60,9 +61,9 @@ const operationsMenu = [
 ];
 
 const financeMenu = [
-  { text: 'Farmer Payments', icon: <PaymentsIcon />, path: '/payments' },
+  { text: 'Farmer Payments', icon: <Badge badgeContent={3} color="error" sx={{ '& .MuiBadge-badge': { fontSize: '10px', height: '16px', minWidth: '16px', transform: 'translate(30%, -20%)' } }}><PaymentsIcon /></Badge>, path: '/payments' },
   { text: 'Billing & Invoices', icon: <ReceiptIcon />, path: '/billing' },
-  { text: 'Customer Dues', icon: <StorefrontIcon />, path: '/customers' }, // Using customers page for dues
+  { text: 'Customer Dues', icon: <StorefrontIcon />, path: '/dues' }, // FIXED: Using dues path
   { text: 'Expenses', icon: <SalesIcon />, path: '/expenses' },
 ];
 

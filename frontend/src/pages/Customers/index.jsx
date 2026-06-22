@@ -25,6 +25,7 @@ import {
 import { Add as AddIcon, Visibility as VisibilityIcon, People as PeopleIcon, AccountBalanceWallet as WalletIcon, WarningAmber as WarningIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { axiosPrivate } from '../../api/axios';
+import StatusBadge from '../../components/StatusBadge';
 
 const CUSTOMER_TYPES = [
   { value: 'RETAIL', label: 'Retail' },
@@ -200,16 +201,7 @@ export default function CustomersList() {
                     </TableCell>
                     <TableCell sx={{ color: 'text.secondary' }}>{customer.mobile_number}</TableCell>
                     <TableCell>
-                      <Chip 
-                        label={customer.customer_type} 
-                        size="small"
-                        sx={{ 
-                          bgcolor: 'rgba(37,99,235,0.1)', 
-                          color: 'primary.main', 
-                          fontWeight: 700,
-                          fontSize: '0.7rem'
-                        }}
-                      />
+                      <StatusBadge status={customer.customer_type} />
                     </TableCell>
                     <TableCell align="right">
                       <Typography sx={{ fontWeight: 800, color: parseFloat(customer.current_balance) > 0 ? 'error.main' : 'success.main', fontSize: '1.1rem' }}>

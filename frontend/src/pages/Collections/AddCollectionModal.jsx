@@ -33,7 +33,8 @@ export default function AddCollectionModal({ open, onClose, onCollectionAdded })
     BUFFALO: { purchase_rate: 0, selling_rate: 0 }
   });
 
-  const [formData, setFormData] = useState({
+  // FIXED: Auto-calculate amount and clear form after save
+  const defaultValues = {
     collection_date: new Date().toISOString().split('T')[0],
     shift: new Date().getHours() < 14 ? 'MORNING' : 'EVENING',
     farmer: null,
@@ -42,7 +43,9 @@ export default function AddCollectionModal({ open, onClose, onCollectionAdded })
     fat_percentage: '',
     snf_percentage: '',
     applied_rate: ''
-  });
+  };
+
+  const [formData, setFormData] = useState(defaultValues);
 
   useEffect(() => {
     if (open) {
@@ -122,27 +125,20 @@ export default function AddCollectionModal({ open, onClose, onCollectionAdded })
       const response = await axiosPrivate.post('/collections/', payload);
       onCollectionAdded(response.data);
       
-      if (isSaveAndNext) {
-        setSuccessMsg(`Collection for ${formData.farmer.name} saved successfully!`);
-        // Reset specific fields
-        setFormData(prev => ({
-          ...prev,
-          farmer: null,
-          quantity: '',
-          fat_percentage: '',
-          snf_percentage: ''
-        }));
-        
-        // Auto focus back to Farmer Selection
-        setTimeout(() => {
-          if (farmerInputRef.current) {
-            farmerInputRef.current.focus();
-          }
-        }, 100);
-        
-      } else {
-        onClose();
-      }
+      // FIXED: Clear form after save (don't close modal)
+      setSuccessMsg(`Collection for ${formData.farmer.name} saved successfully!`);
+      // Reset form to default values
+      setFormData({
+        ...defaultValues,
+        applied_rate: activeRates[formData.milk_type]?.purchase_rate?.toString() || ''
+      });
+      
+      // Auto focus back to Farmer Selection
+      setTimeout(() => {
+        if (farmerInputRef.current) {
+          farmerInputRef.current.focus();
+        }
+      }, 100);
     } catch (err) {
       console.error('Failed to add collection', err);
       const data = err.response?.data;
@@ -318,8 +314,44 @@ export default function AddCollectionModal({ open, onClose, onCollectionAdded })
                 }}
               />
             </Grid>
+            <Grid item xs={12} sm={12}>
+              {/* FIXED: Live amount calculation field */}
+              <TextField
+                fullWidth
+                label="Amount"
+                type="text"
+                name="amount"
+                value={total}
+                readOnly
+                sx={{ '& .MuiOutlinedInput-root': { bgcolor: '#F0F4FF' } }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                  readOnly: true,
+                }}
+              />
+            </Grid>
           </Grid>
           
+          {/* FIXED: Gradient calculation panel */}
+          {parseFloat(formData.quantity) > 0 && parseFloat(formData.applied_rate) > 0 && (
+            <Box sx={{
+              background: 'linear-gradient(135deg, #2563EB, #4F46E5)',
+              borderRadius: '12px', p: 2, mt: 2,
+              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2
+            }}>
+              {[
+                { label: 'Quantity', value: `${formData.quantity} L` },
+                { label: 'Rate', value: `₹${formData.applied_rate}/L` },
+                { label: 'Total Amount', value: `₹${(parseFloat(formData.quantity) * parseFloat(formData.applied_rate)).toFixed(2)}` },
+              ].map(item => (
+                <Box key={item.label} sx={{ textAlign: 'center' }}>
+                  <Typography sx={{ fontSize: 18, fontWeight: 800, color: 'white' }}>{item.value}</Typography>
+                  <Typography sx={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', mt: 0.5 }}>{item.label}</Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+
           <Box sx={{ 
             mt: 4, 
             p: 3, 

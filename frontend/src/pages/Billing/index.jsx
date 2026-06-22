@@ -7,6 +7,8 @@ import {
 import { Add as AddIcon, Print as PrintIcon, Receipt as ReceiptIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import { axiosPrivate } from '../../api/axios';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import { formatDate } from '../../utils/formatDate';
+import StatusBadge from '../../components/StatusBadge';
 
 function BillingModule() {
   const [invoices, setInvoices] = useState([]);
@@ -138,11 +140,11 @@ function BillingModule() {
                 <TableRow key={inv.id} hover>
                   <TableCell>
                     <Typography sx={{ fontWeight: 800 }}>{inv.invoice_number}</Typography>
-                    <Typography variant="caption" color="text.secondary">Issued: {new Date(inv.issue_date).toLocaleDateString()}</Typography>
+                    <Typography variant="caption" color="text.secondary">Issued: {formatDate(inv.issue_date)}</Typography>
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>{inv.customer_name}</TableCell>
                   <TableCell sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
-                    {new Date(inv.start_date).toLocaleDateString()} - {new Date(inv.end_date).toLocaleDateString()}
+                    {formatDate(inv.start_date)} - {formatDate(inv.end_date)}
                   </TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700, fontSize: '1.05rem' }}>
                     ₹ {parseFloat(inv.total_amount).toLocaleString('en-IN', {maximumFractionDigits: 2})}
@@ -151,12 +153,7 @@ function BillingModule() {
                     ₹ {parseFloat(inv.outstanding_amount).toLocaleString('en-IN', {maximumFractionDigits: 2})}
                   </TableCell>
                   <TableCell align="center">
-                    <Chip 
-                      label={inv.status} 
-                      color={inv.status === 'PAID' ? 'success' : inv.status === 'UNPAID' ? 'error' : 'warning'} 
-                      size="small" 
-                      sx={{ fontWeight: 700 }}
-                    />
+                    <StatusBadge status={inv.status} />
                   </TableCell>
                   <TableCell align="center">
                     <Button 
@@ -316,8 +313,8 @@ function BillingModule() {
                 <Grid item xs={6} sx={{ textAlign: 'right' }}>
                   <Typography variant="h4" fontWeight="800" sx={{ color: '#94A3B8', letterSpacing: 2 }}>INVOICE</Typography>
                   <Typography variant="subtitle1" sx={{ mt: 1 }}><b># {selectedInvoice.invoice.invoice_number}</b></Typography>
-                  <Typography variant="body2" color="text.secondary">Date: {new Date(selectedInvoice.invoice.issue_date).toLocaleDateString()}</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Period: {selectedInvoice.invoice.start_date} to {selectedInvoice.invoice.end_date}</Typography>
+                  <Typography variant="body2" color="text.secondary">Date: {formatDate(selectedInvoice.invoice.issue_date)}</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Period: {formatDate(selectedInvoice.invoice.start_date)} to {formatDate(selectedInvoice.invoice.end_date)}</Typography>
                 </Grid>
               </Grid>
 
@@ -341,7 +338,7 @@ function BillingModule() {
                   <TableBody>
                     {selectedInvoice.line_items.map((item, idx) => (
                       <TableRow key={idx} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                        <TableCell sx={{ fontWeight: 500 }}>{item.date}</TableCell>
+                        <TableCell sx={{ fontWeight: 500 }}>{formatDate(item.date)}</TableCell>
                         <TableCell>{item.description}</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 600 }}>{item.quantity} {item.unit}</TableCell>
                         <TableCell align="right">₹ {item.unit_price.toFixed(2)}</TableCell>
@@ -362,12 +359,7 @@ function BillingModule() {
                     
                     <Grid item xs={6}><Typography sx={{ fontWeight: 600, color: 'text.secondary' }}>Status:</Typography></Grid>
                     <Grid item xs={6} sx={{ textAlign: 'right' }}>
-                      <Chip 
-                        label={selectedInvoice.invoice.status} 
-                        size="small" 
-                        color={selectedInvoice.invoice.status === 'UNPAID' ? 'error' : 'success'} 
-                        sx={{ fontWeight: 700 }}
-                      />
+                      <StatusBadge status={selectedInvoice.invoice.status} />
                     </Grid>
 
                     <Grid item xs={12}><Divider sx={{ my: 1 }} /></Grid>
