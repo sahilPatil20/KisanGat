@@ -149,6 +149,7 @@ function SalesList() {
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <StatusBadge status={sale.shift} />
                         <StatusBadge status={sale.milk_type} />
+                        <StatusBadge status={sale.payment_status} /> {/* FIXED: payment_status badge */}
                       </Box>
                     </TableCell>
                     <TableCell align="right" sx={{ fontWeight: 700, fontSize: '1.1rem' }}>{sale.quantity}</TableCell>

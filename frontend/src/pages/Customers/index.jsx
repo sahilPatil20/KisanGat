@@ -19,13 +19,15 @@ import {
   Grid,
   Card,
   CardContent,
-  Avatar,
-  Chip
+  Avatar
 } from '@mui/material';
+// FIXED: Removed unused Chip import — StatusBadge handles all status display
 import { Add as AddIcon, Visibility as VisibilityIcon, People as PeopleIcon, AccountBalanceWallet as WalletIcon, WarningAmber as WarningIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { axiosPrivate } from '../../api/axios';
 import StatusBadge from '../../components/StatusBadge';
+// FIXED: Added formatDate — was missing from this file despite being applied to all other pages
+import { formatDate } from '../../utils/formatDate';
 
 const CUSTOMER_TYPES = [
   { value: 'RETAIL', label: 'Retail' },
