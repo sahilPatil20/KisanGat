@@ -7,7 +7,8 @@ from decimal import Decimal
 from datetime import date, timedelta
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-sys.path.insert(0, os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
 django.setup()
 
 from django.db import transaction
@@ -23,7 +24,7 @@ from apps.billing.models import Invoice
 
 User = get_user_model()
 
-OUT = open('validate_output.txt', 'w')
+OUT = open(os.path.join(BASE_DIR, 'validate_output.txt'), 'w')
 def log(msg):
     OUT.write(msg + '\n')
     OUT.flush()

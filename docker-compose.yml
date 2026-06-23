@@ -5,13 +5,13 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: kisangat
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3307:3306"
+      MYSQL_USER: kisangat
+      MYSQL_PASSWORD: ${DB_PASSWORD:-change-me}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-change-root-password}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -19,9 +19,6 @@ services:
   backend:
     build: ./backend
     container_name: kisangat_backend
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./backend:/app
     ports:
       - "8000:8000"
     env_file:
@@ -30,23 +27,20 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=kisangat
-      - DB_USER=root
-      - DB_PASSWORD=root
+      - DB_USER=kisangat
+      - DB_PASSWORD=${DB_PASSWORD:-change-me}
     depends_on:
       db:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api}
     container_name: kisangat_frontend
-    command: npm run dev -- --host
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8000/api
+      - "5173:80"
 
 volumes:
   mysql_data:

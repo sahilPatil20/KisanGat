@@ -17,3 +17,10 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'created_at', 'created_by', 'created_by_name'
         ]
         read_only_fields = ['id', 'invoice_number', 'issue_date', 'created_at', 'created_by']
+
+    def validate(self, data):
+        if data['start_date'] > data['end_date']:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be on or after the start date.'
+            })
+        return data

@@ -204,8 +204,8 @@ export default function CustomersList() {
                       <StatusBadge status={customer.customer_type} />
                     </TableCell>
                     <TableCell align="right">
-                      <Typography sx={{ fontWeight: 800, color: parseFloat(customer.current_balance) > 0 ? 'error.main' : 'success.main', fontSize: '1.1rem' }}>
-                        ₹ {parseFloat(customer.current_balance).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                      <Typography sx={{ fontWeight: 800, color: parseFloat(customer.current_balance || 0) > 0 ? 'error.main' : 'success.main', fontSize: '1.1rem' }}>
+                        ₹ {parseFloat(customer.current_balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">

@@ -259,8 +259,8 @@ export default function AddSaleModal({ open, onClose, onSuccess }) {
           {customerSummary && (
             <Box sx={{ mt: 2, mb: 3, p: 2, bgcolor: 'rgba(225,29,72,0.05)', border: '1px solid rgba(225,29,72,0.1)', borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>Previous Unpaid Balance</Typography>
-              <Typography variant="h6" sx={{ color: customerSummary.outstanding_balance > 0 ? "error.main" : "success.main", fontWeight: 800 }}>
-                ₹ {customerSummary.outstanding_balance.toLocaleString('en-IN', {maximumFractionDigits: 2})}
+              <Typography variant="h6" sx={{ color: parseFloat(customerSummary.outstanding_balance || 0) > 0 ? "error.main" : "success.main", fontWeight: 800 }}>
+                ₹ {parseFloat(customerSummary.outstanding_balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
               </Typography>
             </Box>
           )}

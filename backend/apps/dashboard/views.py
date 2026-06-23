@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from apps.authentication.permissions import IsAuthenticatedStaffOrReadOnly as IsAuthenticated
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum, Count, F

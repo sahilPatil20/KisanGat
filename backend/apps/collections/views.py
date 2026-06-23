@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from apps.authentication.permissions import IsAuthenticatedStaffOrReadOnly as IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction
 from .models import MilkCollection

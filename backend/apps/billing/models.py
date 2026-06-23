@@ -74,15 +74,5 @@ class Invoice(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            # Simple auto-generation for invoice number
-            last_invoice = Invoice.objects.order_by('created_at').last()
-            if last_invoice and last_invoice.invoice_number.startswith('INV-'):
-                try:
-                    num = int(last_invoice.invoice_number.split('-')[1]) + 1
-                    self.invoice_number = f"INV-{num:05d}"
-                except ValueError:
-                    self.invoice_number = "INV-00001"
-            else:
-                self.invoice_number = "INV-00001"
-            
+            self.invoice_number = f"INV-{uuid.uuid4().hex[:12].upper()}"
         super().save(*args, **kwargs)

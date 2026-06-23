@@ -213,3 +213,27 @@ class IntegrationPhase16Tests(TestCase):
         }, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_non_staff_user_can_read_but_cannot_modify(self):
+        reader = User.objects.create_user(username='reader', password='password')
+        self.client.force_authenticate(user=reader)
+
+        read_response = self.client.get('/api/v1/farmers/')
+        write_response = self.client.post('/api/v1/farmers/', {
+            'name': 'Blocked Farmer',
+            'mobile_number': '7777777777'
+        }, format='json')
+
+        self.assertEqual(read_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(write_response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(Farmer.objects.filter(name='Blocked Farmer').exists())
+
+    def test_direct_invoice_creation_is_disabled(self):
+        response = self.client.post('/api/v1/billing/', {
+            'customer': self.customer.id,
+            'start_date': str(date.today() - timedelta(days=1)),
+            'end_date': str(date.today()),
+            'total_amount': '100.00'
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

@@ -67,7 +67,7 @@ export default function CustomerPaymentModal({ open, onClose, customer, onSucces
           <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
             <Typography variant="body2" color="textSecondary">Current Amount Owed</Typography>
             <Typography variant="h5" color="error.main" fontWeight="bold">
-              ₹ {customer.current_balance}
+              ₹ {parseFloat(customer.current_balance || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
             </Typography>
           </Box>
 

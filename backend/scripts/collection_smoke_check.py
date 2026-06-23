@@ -1,7 +1,11 @@
 import os
+import sys
 import traceback
 
-with open(r's:\KisanGat\KisanGat\backend\test_output_2.txt', 'w') as f:
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+
+with open(os.path.join(BASE_DIR, 'test_output_2.txt'), 'w') as f:
     try:
         f.write("Starting test_post.py\n")
         import django

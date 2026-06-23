@@ -1,6 +1,9 @@
 import os
 import django
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import sys
+sys.path.insert(0, BASE_DIR)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
@@ -19,7 +22,7 @@ try:
 
     customer = Customer.objects.filter(name__icontains='Sahil Patil').first()
     if not customer:
-        with open('debug_output.json', 'w') as f:
+        with open(os.path.join(BASE_DIR, 'debug_output.json'), 'w') as f:
             f.write(json.dumps({'error': 'Customer not found'}))
         exit()
     
@@ -59,10 +62,10 @@ try:
             {**p, 'payment_date': str(p['payment_date'])} for p in payments
         ]
     }
-    with open('debug_output.json', 'w') as f:
+    with open(os.path.join(BASE_DIR, 'debug_output.json'), 'w') as f:
         json.dump(output, f, cls=DecimalEncoder, indent=2)
 
 except Exception as e:
     import traceback
-    with open('debug_output.json', 'w') as f:
+    with open(os.path.join(BASE_DIR, 'debug_output.json'), 'w') as f:
         f.write(traceback.format_exc())

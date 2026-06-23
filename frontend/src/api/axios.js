@@ -2,7 +2,8 @@ import axios from 'axios';
 import store from '../store';
 import { logout, setCredentials } from '../store/slices/authSlice';
 
-const BASE_URL = 'http://localhost:8000/api/v1';
+const API_ROOT = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/$/, '');
+const BASE_URL = `${API_ROOT}/v1`;
 
 export const axiosPrivate = axios.create({
     baseURL: BASE_URL,

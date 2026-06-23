@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from apps.authentication.permissions import IsAuthenticatedStaffOrReadOnly as IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction
 from django.db.models import Sum
@@ -17,8 +17,11 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+    def create(self, request, *args, **kwargs):
+        return Response(
+            {'detail': 'Use the generate endpoint to create invoices.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     @action(detail=False, methods=['post'], url_path='preview')
     def preview_invoice(self, request):
@@ -79,43 +82,42 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         if not all([customer_id, start_date, end_date]):
             return Response({'error': 'Missing required fields (customer, start_date, end_date)'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            customer = Customer.objects.get(id=customer_id)
-        except Customer.DoesNotExist:
-            return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Check for overlapping invoices
-        overlapping_invoices = Invoice.objects.filter(
-            customer=customer,
-            start_date__lte=end_date,
-            end_date__gte=start_date
-        )
-        if overlapping_invoices.exists():
-            return Response({'error': 'An invoice already exists for some or all of the specified date range'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Query Milk Sales
-        milk_sales = MilkSale.objects.filter(
-            customer=customer,
-            sale_date__gte=start_date,
-            sale_date__lte=end_date
-        )
-        milk_total = milk_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
-
-        # Query Product Sales
-        product_sales = ProductSale.objects.filter(
-            customer=customer,
-            sale_date__gte=start_date,
-            sale_date__lte=end_date
-        )
-        product_total = product_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
-
-        total_amount = milk_total + product_total
-
-        if total_amount == 0:
-            return Response({'error': 'No unbilled sales found for this customer in the specified date range'}, status=status.HTTP_400_BAD_REQUEST)
-
         with transaction.atomic():
-            # Create Invoice
+            try:
+                customer = Customer.objects.select_for_update().get(id=customer_id)
+            except Customer.DoesNotExist:
+                return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            if Invoice.objects.filter(
+                customer=customer,
+                start_date__lte=end_date,
+                end_date__gte=start_date
+            ).exists():
+                return Response(
+                    {'error': 'An invoice already exists for some or all of the specified date range'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            milk_sales = MilkSale.objects.filter(
+                customer=customer,
+                sale_date__gte=start_date,
+                sale_date__lte=end_date
+            )
+            product_sales = ProductSale.objects.filter(
+                customer=customer,
+                sale_date__gte=start_date,
+                sale_date__lte=end_date
+            )
+            milk_total = milk_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+            product_total = product_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+            total_amount = milk_total + product_total
+
+            if total_amount == 0:
+                return Response(
+                    {'error': 'No unbilled sales found for this customer in the specified date range'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             invoice = Invoice.objects.create(
                 customer=customer,
                 start_date=start_date,
