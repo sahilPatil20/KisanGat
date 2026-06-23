@@ -14,3 +14,22 @@ class MilkSaleSerializer(serializers.ModelSerializer):
             'payment_status', 'remarks', 'paid_amount', 'created_at'
         ]
         read_only_fields = ['id', 'created_at', 'total_amount']
+
+    def validate(self, data):
+        quantity = data['quantity']
+        applied_rate = data['applied_rate']
+        paid_amount = data.get('paid_amount', 0)
+        total_amount = quantity * applied_rate
+
+        errors = {}
+        if quantity <= 0:
+            errors['quantity'] = 'Quantity must be greater than zero.'
+        if applied_rate <= 0:
+            errors['applied_rate'] = 'Applied rate must be greater than zero.'
+        if paid_amount < 0:
+            errors['paid_amount'] = 'Paid amount cannot be negative.'
+        elif paid_amount > total_amount:
+            errors['paid_amount'] = 'Paid amount cannot exceed the sale total.'
+        if errors:
+            raise serializers.ValidationError(errors)
+        return data

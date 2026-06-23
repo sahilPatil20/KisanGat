@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
+import { logout } from '../store/slices/authSlice';
 
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 const WARNING_TIME_MS = 2 * 60 * 1000; // 2 minutes warning
@@ -10,6 +12,7 @@ export default function SessionTimeoutGuard({ children }) {
   const timeoutRef = useRef(null);
   const warningRef = useRef(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const resetTimers = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -28,9 +31,7 @@ export default function SessionTimeoutGuard({ children }) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    sessionStorage.clear();
+    dispatch(logout());
     navigate('/login');
   };
 

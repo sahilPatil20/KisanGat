@@ -7,7 +7,7 @@ from django.db.models import Sum
 from decimal import Decimal
 from .models import Product, ProductInventoryTransaction, ProductSale
 from .serializers import ProductSerializer, ProductInventoryTransactionSerializer, ProductSaleSerializer
-from apps.customers.models import CustomerLedger, CustomerPayment
+from apps.customers.models import Customer, CustomerLedger, CustomerPayment
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by('name')
@@ -71,9 +71,17 @@ class ProductSaleViewSet(viewsets.ModelViewSet):
             quantity = Decimal(str(serializer.validated_data['quantity']))
             unit_price = Decimal(str(serializer.validated_data['unit_price']))
             total_amount = quantity * unit_price
-            paid_amount = serializer.validated_data.pop('paid_amount', Decimal('0.00'))
+            paid_amount = serializer.validated_data.get('paid_amount', Decimal('0.00'))
 
-            sale = serializer.save(total_amount=total_amount, recorded_by=self.request.user)
+            customer = Customer.objects.select_for_update().get(
+                pk=serializer.validated_data['customer'].pk
+            )
+            sale = serializer.save(
+                customer=customer,
+                total_amount=total_amount,
+                paid_amount=paid_amount,
+                recorded_by=self.request.user
+            )
             
             # 1. Update Product Inventory
             ProductInventoryTransaction.objects.create(
@@ -86,7 +94,6 @@ class ProductSaleViewSet(viewsets.ModelViewSet):
             )
 
             # 2. Ledger Integration (Sale Debit)
-            customer = sale.customer
             latest_ledger = customer.ledger_entries.order_by('-transaction_date', '-id').first()
             previous_balance = latest_ledger.running_balance if latest_ledger else Decimal('0.00')
 

@@ -6,7 +6,7 @@ from decimal import Decimal
 from datetime import date, timedelta
 
 from apps.farmers.models import Farmer, FarmerLedger
-from apps.customers.models import Customer, CustomerLedger
+from apps.customers.models import Customer, CustomerLedger, CustomerPayment
 from apps.inventory.models import InventoryTransaction
 from apps.products.models import Product, ProductInventoryTransaction, ProductSale
 from apps.settings.models import MilkRate
@@ -45,7 +45,7 @@ class IntegrationPhase16Tests(TestCase):
         }
         
         response = self.client.post('/api/v1/collections/', payload, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         
         # 2. Check Farmer Ledger (Credit expected)
         ledger_entry = self.farmer.ledger_entries.first()
@@ -127,3 +127,89 @@ class IntegrationPhase16Tests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('error', response.data)
         self.assertTrue('An invoice already exists' in response.data['error'])
+
+    def test_rejects_invalid_financial_values(self):
+        collection_response = self.client.post('/api/v1/collections/', {
+            "farmer": self.farmer.id,
+            "collection_date": str(date.today()),
+            "milk_type": "COW",
+            "shift": "MORNING",
+            "quantity": "-1.00",
+            "fat_percentage": "3.5",
+            "applied_rate": "40.00",
+        }, format='json')
+        self.assertEqual(collection_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        sale_response = self.client.post('/api/v1/sales/', {
+            "customer": self.customer.id,
+            "sale_date": str(date.today()),
+            "milk_type": "COW",
+            "shift": "MORNING",
+            "quantity": "2.00",
+            "applied_rate": "50.00",
+            "paid_amount": "101.00",
+        }, format='json')
+        self.assertEqual(sale_response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_farmer_overpayment(self):
+        FarmerLedger.objects.create(
+            farmer=self.farmer,
+            transaction_type='COLLECTION',
+            credit_amount=Decimal('100.00'),
+            running_balance=Decimal('100.00')
+        )
+
+        response = self.client.post('/api/v1/payments/', {
+            "farmer": self.farmer.id,
+            "amount": "101.00",
+            "payment_method": "CASH"
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(FarmerPayment.objects.count(), 0)
+
+    def test_rejects_customer_overpayment(self):
+        CustomerLedger.objects.create(
+            customer=self.customer,
+            transaction_type='SALE',
+            debit_amount=Decimal('100.00'),
+            running_balance=Decimal('100.00')
+        )
+
+        response = self.client.post(
+            f'/api/v1/customers/{self.customer.id}/record-payment/',
+            {"amount": "101.00", "payment_method": "CASH"},
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(CustomerPayment.objects.count(), 0)
+
+    def test_product_sale_persists_paid_amount(self):
+        response = self.client.post('/api/v1/products/sales/', {
+            "customer": self.customer.id,
+            "product": self.product.id,
+            "quantity": "2.00",
+            "unit_price": "500.00",
+            "paid_amount": "250.00"
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        sale = ProductSale.objects.get()
+        self.assertEqual(sale.paid_amount, Decimal('250.00'))
+        self.assertEqual(
+            self.customer.ledger_entries.order_by('-id').first().running_balance,
+            Decimal('750.00')
+        )
+
+    def test_settings_update_returns_success(self):
+        response = self.client.put('/api/v1/settings/', {
+            "dairy": {
+                "dairy_name": "Test Dairy",
+                "owner_name": "Owner",
+                "address": "Test Address",
+                "phone": "9999999999"
+            }
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

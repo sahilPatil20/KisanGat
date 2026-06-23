@@ -14,3 +14,8 @@ class FarmerPaymentSerializer(serializers.ModelSerializer):
             'created_at', 'processed_by', 'processed_by_name'
         ]
         read_only_fields = ['id', 'payment_date', 'created_at', 'processed_by']
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Amount must be greater than zero.')
+        return value

@@ -13,6 +13,11 @@ class InventoryAdjustmentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'created_by']
 
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Quantity must be greater than zero.')
+        return value
+
 class InventoryTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryTransaction

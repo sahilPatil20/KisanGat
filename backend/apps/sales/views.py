@@ -48,10 +48,12 @@ class MilkSaleViewSet(viewsets.ModelViewSet):
             total_amount = quantity * applied_rate
             paid_amount = serializer.validated_data.pop('paid_amount', Decimal('0.00'))
 
-            sale = serializer.save(total_amount=total_amount)
-            
+            customer = Customer.objects.select_for_update().get(
+                pk=serializer.validated_data['customer'].pk
+            )
+            sale = serializer.save(customer=customer, total_amount=total_amount)
+
             # --- Ledger Integration (Sale Debit) ---
-            customer = sale.customer
             latest_ledger = customer.ledger_entries.order_by('-transaction_date', '-id').first()
             previous_balance = latest_ledger.running_balance if latest_ledger else Decimal('0.00')
 

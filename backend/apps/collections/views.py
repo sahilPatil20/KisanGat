@@ -19,11 +19,14 @@ class MilkCollectionViewSet(viewsets.ModelViewSet):
             applied_rate = Decimal(str(serializer.validated_data['applied_rate']))
             total_amount = quantity * applied_rate
 
+            farmer = Farmer.objects.select_for_update().get(
+                pk=serializer.validated_data['farmer'].pk
+            )
+
             # Save the MilkCollection
-            collection = serializer.save(total_amount=total_amount)
+            collection = serializer.save(farmer=farmer, total_amount=total_amount)
 
             # --- Ledger Integration ---
-            farmer = collection.farmer
             latest_ledger = farmer.ledger_entries.order_by('-transaction_date', '-id').first()
             previous_balance = latest_ledger.running_balance if latest_ledger else Decimal('0.00')
 

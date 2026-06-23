@@ -3,8 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction
-from django.db.models import F
 from decimal import Decimal
+from rest_framework.exceptions import ValidationError
 from .models import FarmerPayment
 from .serializers import FarmerPaymentSerializer
 from apps.farmers.models import Farmer, FarmerLedger
@@ -79,7 +79,7 @@ class FarmerPaymentViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             for f_id in farmer_ids:
                 try:
-                    farmer = Farmer.objects.get(id=f_id)
+                    farmer = Farmer.objects.select_for_update().get(id=f_id, is_deleted=False)
                 except Farmer.DoesNotExist:
                     continue
 
@@ -118,15 +118,17 @@ class FarmerPaymentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         with transaction.atomic():
-            payment = serializer.save(processed_by=self.request.user)
-            
-            # --- Ledger Integration ---
-            farmer = payment.farmer
+            farmer = Farmer.objects.select_for_update().get(
+                pk=serializer.validated_data['farmer'].pk
+            )
             latest_ledger = farmer.ledger_entries.order_by('-transaction_date', '-id').first()
             previous_balance = latest_ledger.running_balance if latest_ledger else Decimal('0.00')
+            amount = serializer.validated_data['amount']
+            if amount > previous_balance:
+                raise ValidationError({'amount': 'Payment cannot exceed the outstanding balance.'})
 
             # Payment is a debit (reduces the amount we owe to the farmer)
-            amount = Decimal(str(payment.amount))
+            payment = serializer.save(farmer=farmer, processed_by=self.request.user)
             new_balance = previous_balance - amount
 
             remarks = f"Payment via {payment.get_payment_method_display()}"

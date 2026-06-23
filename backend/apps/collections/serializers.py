@@ -16,6 +16,12 @@ class MilkCollectionSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'total_amount']
 
     def validate(self, data):
-        # We can add custom validation logic here if needed
-        # e.g., ensure future dates are not allowed
+        if data['quantity'] <= 0:
+            raise serializers.ValidationError({'quantity': 'Quantity must be greater than zero.'})
+        if data['applied_rate'] <= 0:
+            raise serializers.ValidationError({'applied_rate': 'Applied rate must be greater than zero.'})
+        if data['fat_percentage'] <= 0:
+            raise serializers.ValidationError({'fat_percentage': 'Fat percentage must be greater than zero.'})
+        if data.get('snf_percentage') is not None and data['snf_percentage'] <= 0:
+            raise serializers.ValidationError({'snf_percentage': 'SNF percentage must be greater than zero.'})
         return data

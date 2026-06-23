@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from django.db import transaction
 from decimal import Decimal
 from .models import Customer, CustomerLedger, CustomerAuditLog, CustomerPayment
@@ -28,12 +29,14 @@ class CustomerViewSet(viewsets.ModelViewSet):
         
         if serializer.is_valid():
             with transaction.atomic():
-                payment = serializer.save(processed_by=request.user)
-                
+                customer = Customer.objects.select_for_update().get(pk=customer.pk)
                 latest_ledger = customer.ledger_entries.order_by('-transaction_date', '-id').first()
                 previous_balance = latest_ledger.running_balance if latest_ledger else Decimal('0.00')
+                amount = serializer.validated_data['amount']
+                if amount > previous_balance:
+                    raise ValidationError({'amount': 'Payment cannot exceed the outstanding balance.'})
 
-                amount = Decimal(str(payment.amount))
+                payment = serializer.save(customer=customer, processed_by=request.user)
                 new_balance = previous_balance - amount
 
                 remarks = f"Payment Received via {payment.get_payment_method_display()}"
@@ -76,14 +79,17 @@ class CustomerPaymentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         with transaction.atomic():
-            payment = serializer.save(processed_by=self.request.user)
-            
-            customer = payment.customer
+            customer = Customer.objects.select_for_update().get(
+                pk=serializer.validated_data['customer'].pk
+            )
             latest_ledger = customer.ledger_entries.order_by('-transaction_date', '-id').first()
             previous_balance = latest_ledger.running_balance if latest_ledger else Decimal('0.00')
+            amount = serializer.validated_data['amount']
+            if amount > previous_balance:
+                raise ValidationError({'amount': 'Payment cannot exceed the outstanding balance.'})
 
             # Payment from customer reduces their owed balance (Credit)
-            amount = Decimal(str(payment.amount))
+            payment = serializer.save(customer=customer, processed_by=self.request.user)
             new_balance = previous_balance - amount
 
             remarks = f"Payment Received via {payment.get_payment_method_display()}"

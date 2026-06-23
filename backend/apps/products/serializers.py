@@ -6,6 +6,11 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 
+    def validate_unit_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Unit price must be greater than zero.')
+        return value
+
 class ProductInventoryTransactionSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
@@ -18,6 +23,11 @@ class ProductInventoryTransactionSerializer(serializers.ModelSerializer):
             'created_at', 'created_by', 'created_by_name'
         ]
         read_only_fields = ['id', 'created_at', 'created_by']
+
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Quantity must be greater than zero.')
+        return value
 
 class ProductSaleSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.name', read_only=True)
@@ -32,3 +42,22 @@ class ProductSaleSerializer(serializers.ModelSerializer):
             'sale_date', 'remarks', 'created_at', 'recorded_by', 'recorded_by_name'
         ]
         read_only_fields = ['id', 'total_amount', 'created_at', 'recorded_by']
+
+    def validate(self, data):
+        quantity = data['quantity']
+        unit_price = data['unit_price']
+        paid_amount = data.get('paid_amount', 0)
+        total_amount = quantity * unit_price
+
+        errors = {}
+        if quantity <= 0:
+            errors['quantity'] = 'Quantity must be greater than zero.'
+        if unit_price <= 0:
+            errors['unit_price'] = 'Unit price must be greater than zero.'
+        if paid_amount < 0:
+            errors['paid_amount'] = 'Paid amount cannot be negative.'
+        elif paid_amount > total_amount:
+            errors['paid_amount'] = 'Paid amount cannot exceed the sale total.'
+        if errors:
+            raise serializers.ValidationError(errors)
+        return data
