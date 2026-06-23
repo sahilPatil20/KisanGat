@@ -11,6 +11,7 @@ import CollectionsList from './pages/Collections';
 import PaymentsList from './pages/Payments';
 import CustomersList from './pages/Customers';
 import CustomerProfile from './pages/Customers/CustomerProfile';
+import CustomerDues from './pages/Customers/Dues';
 import SalesList from './pages/Sales';
 import InventoryModule from './pages/Inventory';
 import ProductsModule from './pages/Products';
@@ -41,6 +42,7 @@ function App() {
             <Route path="/payments" element={<PaymentsList />} />
             <Route path="/customers" element={<CustomersList />} />
             <Route path="/customers/:id" element={<CustomerProfile />} />
+            <Route path="/dues" element={<CustomerDues />} />
             <Route path="/sales" element={<SalesList />} />
             <Route path="/inventory" element={<InventoryModule />} />
             <Route path="/products" element={<ProductsModule />} />

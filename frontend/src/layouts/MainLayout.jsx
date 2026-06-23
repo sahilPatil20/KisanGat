@@ -63,7 +63,7 @@ const operationsMenu = [
 const financeMenu = [
   { text: 'Farmer Payments', icon: <Badge badgeContent={3} color="error" sx={{ '& .MuiBadge-badge': { fontSize: '10px', height: '16px', minWidth: '16px', transform: 'translate(30%, -20%)' } }}><PaymentsIcon /></Badge>, path: '/payments' },
   { text: 'Billing & Invoices', icon: <ReceiptIcon />, path: '/billing' },
-  { text: 'Customer Dues', icon: <StorefrontIcon />, path: '/dues' }, // FIXED: Using dues path
+  { text: 'Customer Dues', icon: <StorefrontIcon />, path: '/dues' },
   { text: 'Expenses', icon: <SalesIcon />, path: '/expenses' },
 ];
 
